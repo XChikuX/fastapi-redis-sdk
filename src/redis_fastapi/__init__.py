@@ -23,7 +23,12 @@ from redis_fastapi.deps import (
 from redis_fastapi.lifespan import redis_lifespan
 from redis_fastapi.setup import FastAPIRedis
 from redis_fastapi.telemetry import disable_telemetry, enable_telemetry
-from redis_fastapi.types import Coder, JsonCoder, KeyBuilder
+from redis_fastapi.types import (
+    Coder,
+    JsonCoder,
+    KeyBuilder,
+    pydantic_model_coder,
+)
 
 __all__ = [
     "AsyncRedisDep",
@@ -48,5 +53,6 @@ __all__ = [
     "get_cache_backend",
     "get_settings",
     "get_sync_cache_backend",
+    "pydantic_model_coder",
     "redis_lifespan",
 ]

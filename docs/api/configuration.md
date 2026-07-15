@@ -134,6 +134,40 @@ class Coder(Protocol):
 
 Default `Coder` implementation using `json.dumps` / `json.loads`.
 
+### `pydantic_model_coder()`
+
+```python
+from redis_fastapi import pydantic_model_coder
+
+ProductCoder = pydantic_model_coder(Product)
+```
+
+Creates a `Coder` class for one Pydantic model type. Encoded values can be
+model instances or data that Pydantic can validate into that model; decoded
+values are returned as model instances.
+
+Because the coder is model-specific, select it the DI-native way — declare a
+model-specific `CacheBackend` provider and inject it (the default
+`CacheBackendDep` keeps `JsonCoder`):
+
+```python
+from typing import Annotated
+from fastapi import Depends
+from pydantic import BaseModel
+from redis_fastapi import AsyncRedisDep, CacheBackend, pydantic_model_coder
+
+class Product(BaseModel):
+    id: int
+    name: str
+
+ProductCoder = pydantic_model_coder(Product)
+
+async def get_product_cache(redis: AsyncRedisDep) -> CacheBackend:
+    return CacheBackend(redis, coder=ProductCoder, eviction_group="products")
+
+ProductCacheDep = Annotated[CacheBackend, Depends(get_product_cache)]
+```
+
 ### `KeyBuilder`
 
 ```python
@@ -141,4 +175,3 @@ KeyBuilder = Callable[..., str | Awaitable[str]]
 ```
 
 Callable that receives `(request, eviction_group, prefix)` and returns a cache key.
-
