@@ -747,6 +747,20 @@ class CacheResponseCaptureMiddleware:
                 response_status = message["status"]
                 response_headers = list(message.get("headers", []))
                 return
+            # Fix for pathsend capable ASGI's
+            if message["type"] == "http.response.pathsend":
+                # Granian advertises the http.response.pathsend ASGI extension;
+                if not passthrough:
+                    await send(
+                        {
+                            "type": "http.response.start",
+                            "status": response_status,
+                            "headers": response_headers,
+                        }
+                    )
+                    passthrough = True
+                await send(message)
+                return
 
             if message["type"] != "http.response.body":
                 return
