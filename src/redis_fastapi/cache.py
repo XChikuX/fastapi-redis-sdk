@@ -747,9 +747,10 @@ class CacheResponseCaptureMiddleware:
                 response_status = message["status"]
                 response_headers = list(message.get("headers", []))
                 return
-            # Fix for pathsend capable ASGI's
-            if message["type"] == "http.response.pathsend":
-                # Granian advertises the http.response.pathsend ASGI extension;
+
+            # Any other message type (pathsend, zerocopysend, trailers, debug, …):
+            # we can't buffer/cache it, so flush the buffered start and pass it through.
+            if message["type"] != "http.response.body":
                 if not passthrough:
                     await send(
                         {
@@ -760,9 +761,6 @@ class CacheResponseCaptureMiddleware:
                     )
                     passthrough = True
                 await send(message)
-                return
-
-            if message["type"] != "http.response.body":
                 return
 
             # 2. No pending cache op — forward body as-is
